@@ -22,6 +22,20 @@ def get_all_shipments_by_customer(db: Session, customer_id):
     return db.query(Shipment).filter(Shipment.customer_id == customer_id).all()
 
 
+def update_shipment_status(db: Session, shipment: Shipment, status: str) -> Shipment:
+    shipment.status = status
+    db.commit()
+    db.refresh(shipment)
+    return shipment
+
+
+def assign_agent_to_shipment(db: Session, shipment: Shipment, agent_id) -> Shipment:
+    shipment.agent_id = agent_id
+    db.commit()
+    db.refresh(shipment)
+    return shipment
+
+
 def delete_shipment(db: Session, shipment: Shipment):
     db.delete(shipment)
     db.commit()
