@@ -45,5 +45,5 @@ pytest -v
 | GET | /shipments/ | Customer | View all my shipments |
 | GET | /shipments/{tracking_number} | Any Auth | Track shipment |
 | DELETE | /shipments/{id} | Customer | Cancel shipment |
-
 | POST | /tracking/{shipment_id} | Agent | Add tracking update |
+
