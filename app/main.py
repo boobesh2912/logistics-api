@@ -16,7 +16,7 @@ from app.models import user, shipment, tracking, hub  # noqa
 
 app = FastAPI(
     title="Logistics & Shipment Tracking API",
-    description="Sprint 1 - Shipment Creation & Tracking",
+    description="Sprint 2 - Role Based Updates and Agent Flow",
     version="1.0.0"
 )
 
