@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ## Configure .env
 
 ```
-DATABASE_URL=postgresql://sa:admin123@localhost:5432/logistics_db
+DATABASE_URL=postgresql://username:password@localhost:5432/logistics_db
 SECRET_KEY=supersecretkey_logistics_2026
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -45,4 +45,5 @@ pytest -v
 | GET | /shipments/ | Customer | View all my shipments |
 | GET | /shipments/{tracking_number} | Any Auth | Track shipment |
 | DELETE | /shipments/{id} | Customer | Cancel shipment |
+
 | POST | /tracking/{shipment_id} | Agent | Add tracking update |
