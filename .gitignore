@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual Environment
+venv/
+env/
+
+# Environment Variables
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Alembic
+alembic/versions/
+
+# OS
+.DS_Store
+Thumbs.db
