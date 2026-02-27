@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -19,6 +19,7 @@ class ShipmentAssignAgent(BaseModel):
 
 
 class ShipmentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     tracking_number: str
     source_address: str
@@ -27,14 +28,9 @@ class ShipmentResponse(BaseModel):
     agent_id: Optional[UUID] = None
     created_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
-
 
 class ShipmentTrackResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     tracking_number: str
     status: str
     current_location: Optional[str] = None
-
-    class Config:
-        from_attributes = True
