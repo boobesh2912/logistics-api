@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from typing import List
 from uuid import UUID
 from app.core.database import get_db
 from app.core.dependencies import require_role
 from app.schemas.user_schema import UserResponse
-from typing import List
+from app.schemas.hub_schema import HubCreate, HubUpdate, HubResponse
 from app.services.hub_service import (
     create_hub_service,
     update_hub_service,
@@ -13,7 +14,6 @@ from app.services.hub_service import (
     delete_user_service,
     get_reports_service
 )
-from app.schemas.hub_schema import HubCreate, HubUpdate, HubResponse
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -46,7 +46,7 @@ def delete_hub(
     return delete_hub_service(db, hub_id)
 
 
-@router.get("/users")
+@router.get("/users", response_model=List[UserResponse])
 def get_all_users(
     db: Session = Depends(get_db),
     current_user=Depends(require_role("admin"))

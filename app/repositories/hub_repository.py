@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models.hub import Hub
+from uuid import UUID
 
 
 def create_hub(db: Session, data: dict) -> Hub:
@@ -11,6 +12,8 @@ def create_hub(db: Session, data: dict) -> Hub:
 
 
 def get_hub_by_id(db: Session, hub_id) -> Hub | None:
+    if isinstance(hub_id, str):
+        hub_id = UUID(hub_id)
     return db.query(Hub).filter(Hub.id == hub_id).first()
 
 
