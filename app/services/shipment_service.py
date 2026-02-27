@@ -1,7 +1,7 @@
+# app/services/shipment_service.py
 import uuid
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from app.repositories.tracking_repository import create_tracking_update
 from app.repositories.shipment_repository import (
     create_shipment,
     get_shipment_by_tracking_number,
@@ -11,7 +11,7 @@ from app.repositories.shipment_repository import (
     assign_agent_to_shipment,
     delete_shipment
 )
-from app.repositories.tracking_repository import get_latest_tracking
+from app.repositories.tracking_repository import get_latest_tracking, create_tracking_update
 from app.repositories.user_repository import get_user_by_id
 from app.utils.constants import SHIPMENT_STATUSES
 
@@ -28,27 +28,17 @@ def create_new_shipment(db: Session, data: dict, customer_id):
     return create_shipment(db, shipment_data)
 
 
-def update_status_service(db: Session, shipment_id, data: dict, current_user):
-    shipment = get_shipment_by_id(db, shipment_id)
+def track_shipment(db: Session, tracking_number: str):
+    shipment = get_shipment_by_tracking_number(db, tracking_number)
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
 
-    if str(shipment.agent_id) != str(current_user.id):
-        raise HTTPException(status_code=403, detail="You are not assigned to this shipment")
-
-    if data["status"] not in SHIPMENT_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Choose from: {SHIPMENT_STATUSES}")
-
-    updated = update_shipment_status(db, shipment, data["status"])
-
-    # Auto-create tracking record on status update
-    create_tracking_update(db, {
-        "shipment_id": shipment_id,
-        "location": data["location"],
-        "status": data["status"]
-    })
-
-    return updated
+    latest = get_latest_tracking(db, shipment.id)
+    return {
+        "tracking_number": shipment.tracking_number,
+        "status": shipment.status,
+        "current_location": latest.location if latest else None
+    }
 
 
 def get_my_shipments(db: Session, customer_id):
@@ -66,7 +56,15 @@ def update_status_service(db: Session, shipment_id, data: dict, current_user):
     if data["status"] not in SHIPMENT_STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status. Choose from: {SHIPMENT_STATUSES}")
 
-    return update_shipment_status(db, shipment, data["status"])
+    updated = update_shipment_status(db, shipment, data["status"])
+
+    create_tracking_update(db, {
+        "shipment_id": shipment_id,
+        "location": data["location"],
+        "status": data["status"]
+    })
+
+    return updated
 
 
 def assign_agent_service(db: Session, shipment_id, agent_id, current_user):
@@ -94,4 +92,3 @@ def cancel_shipment(db: Session, shipment_id, customer_id):
 
     delete_shipment(db, shipment)
     return {"message": "Shipment cancelled successfully"}
-
