@@ -55,22 +55,22 @@ def test_customer_cannot_update_status(client):
 
 
 def test_admin_assign_agent(client):
-    register_and_login(client, "admin@test.com", "admin")
-    admin_token = register_and_login(client, "admin@test.com", "admin")
-    customer_token = register_and_login(client, "customer@test.com", "customer")
-    client.post("/auth/register", json={"email": "agent@test.com", "password": "pass123", "role": "agent"})
-    agent_login = client.post("/auth/login", data={"username": "agent@test.com", "password": "pass123"})
-    agent_token = agent_login.json()["access_token"]
+    admin_token = register_and_login(client, "admin2@test.com", "admin")
+    customer_token = register_and_login(client, "customer2@test.com", "customer")
+    client.post("/auth/register", json={"email": "agent2@test.com", "password": "pass123", "role": "agent"})
 
-    shipment = create_shipment(client, customer_token)
+    shipment = client.post(
+        "/shipments/",
+        headers={"Authorization": f"Bearer {customer_token}"},
+        json={"source_address": "Chennai", "destination_address": "Bangalore"}
+    ).json()
 
-    from jose import jwt
-    import os
-    payload = jwt.decode(agent_token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+    users = client.get("/admin/users", headers={"Authorization": f"Bearer {admin_token}"}).json()
+    agent = next(u for u in users if u["email"] == "agent2@test.com")
 
     response = client.put(
         f"/shipments/{shipment['id']}/assign-agent",
         headers={"Authorization": f"Bearer {admin_token}"},
-        json={"agent_id": payload.get("user_id") if payload.get("user_id") else "00000000-0000-0000-0000-000000000000"}
+        json={"agent_id": agent["id"]}
     )
-    assert response.status_code in [200, 400]
+    assert response.status_code == 200
