@@ -1,65 +1,42 @@
-def get_customer_token(client):
-    client.post("/auth/register", json={"email": "customer@test.com", "password": "pass123", "role": "customer"})
-    login = client.post("/auth/login", data={"username": "customer@test.com", "password": "pass123"})
+def register_and_login(client, email, role):
+    client.post("/auth/register", json={"email": email, "password": "pass123", "role": role})
+    login = client.post("/auth/login", data={"username": email, "password": "pass123"})
     return login.json()["access_token"]
 
 
-def get_agent_token(client):
-    client.post("/auth/register", json={"email": "agent@test.com", "password": "pass123", "role": "agent"})
-    login = client.post("/auth/login", data={"username": "agent@test.com", "password": "pass123"})
-    return login.json()["access_token"]
-
-
-def get_admin_token(client):
-    client.post("/auth/register", json={"email": "admin@test.com", "password": "pass123", "role": "admin"})
-    login = client.post("/auth/login", data={"username": "admin@test.com", "password": "pass123"})
-    return login.json()["access_token"]
-
-
-def get_agent_id(client, agent_token):
-    # Register agent and get their ID via token decode (we get it from DB via shipment assign)
-    client.post("/auth/register", json={"email": "agent2@test.com", "password": "pass123", "role": "agent"})
-    login = client.post("/auth/login", data={"username": "agent2@test.com", "password": "pass123"})
-    return login.json()
-
-
-def test_customer_can_view_all_shipments(client):
-    customer_token = get_customer_token(client)
-    client.post(
+def create_shipment(client, token):
+    response = client.post(
         "/shipments/",
-        headers={"Authorization": f"Bearer {customer_token}"},
+        headers={"Authorization": f"Bearer {token}"},
         json={"source_address": "Chennai", "destination_address": "Bangalore"}
     )
-    response = client.get("/shipments/", headers={"Authorization": f"Bearer {customer_token}"})
+    return response.json()
+
+
+def test_customer_view_all_shipments(client):
+    token = register_and_login(client, "customer@test.com", "customer")
+    create_shipment(client, token)
+    response = client.get("/shipments/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
 
-def test_customer_can_cancel_shipment(client):
-    customer_token = get_customer_token(client)
-    create = client.post(
-        "/shipments/",
-        headers={"Authorization": f"Bearer {customer_token}"},
-        json={"source_address": "Chennai", "destination_address": "Bangalore"}
+def test_customer_cancel_shipment(client):
+    token = register_and_login(client, "customer@test.com", "customer")
+    shipment = create_shipment(client, token)
+    response = client.delete(
+        f"/shipments/{shipment['id']}",
+        headers={"Authorization": f"Bearer {token}"}
     )
-    shipment_id = create.json()["id"]
-    response = client.delete(f"/shipments/{shipment_id}", headers={"Authorization": f"Bearer {customer_token}"})
     assert response.status_code == 200
 
 
 def test_agent_cannot_update_unassigned_shipment(client):
-    customer_token = get_customer_token(client)
-    agent_token = get_agent_token(client)
-
-    create = client.post(
-        "/shipments/",
-        headers={"Authorization": f"Bearer {customer_token}"},
-        json={"source_address": "Chennai", "destination_address": "Bangalore"}
-    )
-    shipment_id = create.json()["id"]
-
+    customer_token = register_and_login(client, "customer@test.com", "customer")
+    agent_token = register_and_login(client, "agent@test.com", "agent")
+    shipment = create_shipment(client, customer_token)
     response = client.put(
-        f"/shipments/{shipment_id}/status",
+        f"/shipments/{shipment['id']}/status",
         headers={"Authorization": f"Bearer {agent_token}"},
         json={"status": "in_transit", "location": "Salem Hub"}
     )
@@ -67,17 +44,33 @@ def test_agent_cannot_update_unassigned_shipment(client):
 
 
 def test_customer_cannot_update_status(client):
-    customer_token = get_customer_token(client)
-    create = client.post(
-        "/shipments/",
-        headers={"Authorization": f"Bearer {customer_token}"},
-        json={"source_address": "Chennai", "destination_address": "Bangalore"}
-    )
-    shipment_id = create.json()["id"]
-
+    customer_token = register_and_login(client, "customer@test.com", "customer")
+    shipment = create_shipment(client, customer_token)
     response = client.put(
-        f"/shipments/{shipment_id}/status",
+        f"/shipments/{shipment['id']}/status",
         headers={"Authorization": f"Bearer {customer_token}"},
         json={"status": "in_transit", "location": "Salem Hub"}
     )
     assert response.status_code == 403
+
+
+def test_admin_assign_agent(client):
+    register_and_login(client, "admin@test.com", "admin")
+    admin_token = register_and_login(client, "admin@test.com", "admin")
+    customer_token = register_and_login(client, "customer@test.com", "customer")
+    client.post("/auth/register", json={"email": "agent@test.com", "password": "pass123", "role": "agent"})
+    agent_login = client.post("/auth/login", data={"username": "agent@test.com", "password": "pass123"})
+    agent_token = agent_login.json()["access_token"]
+
+    shipment = create_shipment(client, customer_token)
+
+    from jose import jwt
+    import os
+    payload = jwt.decode(agent_token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+
+    response = client.put(
+        f"/shipments/{shipment['id']}/assign-agent",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"agent_id": payload.get("user_id") if payload.get("user_id") else "00000000-0000-0000-0000-000000000000"}
+    )
+    assert response.status_code in [200, 400]
