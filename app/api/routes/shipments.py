@@ -30,7 +30,7 @@ def create_shipment(
     db: Session = Depends(get_db),
     current_user=Depends(require_role("customer"))
 ):
-    return create_new_shipment(db, data.dict(), current_user.id)
+    return create_new_shipment(db, data.model_dump(), current_user.id)
 
 
 # Customer - View all my shipments
@@ -60,7 +60,7 @@ def update_status(
     db: Session = Depends(get_db),
     current_user=Depends(require_role("agent"))
 ):
-    return update_status_service(db, shipment_id, data.dict(), current_user)
+    return update_status_service(db, shipment_id, data.model_dump(), current_user)
 
 
 # Admin - Assign agent to shipment
