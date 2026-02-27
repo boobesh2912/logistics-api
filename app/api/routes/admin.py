@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from app.core.database import get_db
 from app.core.dependencies import require_role
+from app.schemas.user_schema import UserResponse
+from typing import List
 from app.services.hub_service import (
     create_hub_service,
     update_hub_service,
