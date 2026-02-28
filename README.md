@@ -26,7 +26,9 @@ Similar to platforms like FedEx, Delhivery, or DHL backend systems.
 | PostgreSQL | Primary database |
 | JWT (python-jose) | Authentication |
 | Passlib + bcrypt | Password hashing |
-| Docker | Containerization (Sprint 4) |
+| Alembic | Database migrations |
+| Docker | Containerization |
+| Redis | Tracking cache & real-time status (Sprint 4 — architecture defined) |
 | pytest + httpx | Testing |
 | Python 3.11 | Runtime |
 
@@ -46,6 +48,7 @@ logistics-api/
 │   │   ├── security.py
 │   │   └── dependencies.py
 │   ├── models/
+│   │   ├── base.py
 │   │   ├── user.py
 │   │   ├── shipment.py
 │   │   ├── tracking.py
@@ -57,7 +60,15 @@ logistics-api/
 │   │   ├── hub_schema.py
 │   │   └── user_schema.py
 │   ├── repositories/
+│   │   ├── user_repository.py
+│   │   ├── shipment_repository.py
+│   │   ├── tracking_repository.py
+│   │   └── hub_repository.py
 │   ├── services/
+│   │   ├── auth_service.py
+│   │   ├── shipment_service.py
+│   │   ├── tracking_service.py
+│   │   └── hub_service.py
 │   ├── api/
 │   │   ├── router.py
 │   │   └── routes/
@@ -70,7 +81,13 @@ logistics-api/
 │   │   ├── logging_middleware.py
 │   │   └── rate_limiter.py
 │   ├── exceptions/
+│   │   ├── custom_exceptions.py
+│   │   └── exception_handlers.py
 │   └── utils/
+│       ├── constants.py
+│       └── validators.py
+├── alembic/
+├── alembic.ini
 ├── tests/
 │   ├── conftest.py
 │   ├── test_auth.py
@@ -78,6 +95,8 @@ logistics-api/
 │   ├── test_tracking.py
 │   ├── test_hubs.py
 │   └── test_admin.py
+├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
 └── .env
 ```
@@ -139,7 +158,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 > Note: Create the PostgreSQL database `logistics_db` before running the app.
 
-### 5. Run the application
+### 5. Run database migrations
+
+```bash
+alembic upgrade head
+```
+
+### 6. Run the application
 
 ```bash
 uvicorn app.main:app --reload
@@ -218,6 +243,16 @@ Each service is an independent FastAPI application with its own database and Doc
 | hub-service | 8003 | http://localhost:8003/docs | hub_db |
 | tracking-service | 8004 | http://localhost:8004/docs | tracking_db |
 | reporting-service | 8005 | http://localhost:8005/docs | reads shipment_db + auth_db |
+
+### Enterprise Architecture
+
+| Communication | Technology |
+|---|---|
+| Client → Service | REST (HTTP) |
+| Service → Service | Kafka (architecture defined in PDF; REST fallback used for demo) |
+| Real-time tracking | Redis (architecture defined in PDF) |
+| Persistence | PostgreSQL |
+| Deployment | Docker |
 
 ### Run with Docker
 
