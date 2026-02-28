@@ -74,3 +74,31 @@ def test_admin_assign_agent(client):
         json={"agent_id": agent["id"]}
     )
     assert response.status_code == 200
+
+
+def test_update_status(client):
+    admin_token = register_and_login(client, "admin3@test.com", "admin")
+    customer_token = register_and_login(client, "customer3@test.com", "customer")
+    agent_token = register_and_login(client, "agent3@test.com", "agent")
+
+    shipment = client.post(
+        "/shipments/",
+        headers={"Authorization": f"Bearer {customer_token}"},
+        json={"source_address": "Chennai", "destination_address": "Bangalore"}
+    ).json()
+
+    users = client.get("/admin/users", headers={"Authorization": f"Bearer {admin_token}"}).json()
+    agent = next(u for u in users if u["email"] == "agent3@test.com")
+
+    client.put(
+        f"/shipments/{shipment['id']}/assign-agent",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"agent_id": agent["id"]}
+    )
+
+    response = client.put(
+        f"/shipments/{shipment['id']}/status",
+        headers={"Authorization": f"Bearer {agent_token}"},
+        json={"status": "in_transit", "location": "Salem"}
+    )
+    assert response.status_code == 200

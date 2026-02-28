@@ -7,7 +7,7 @@ def register_and_login(client, email, role):
 def test_create_hub(client):
     admin_token = register_and_login(client, "admin@hub.com", "admin")
     response = client.post(
-        "/hubs/",
+        "/admin/hubs",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"hub_name": "Mumbai Hub", "city": "Mumbai"}
     )
@@ -19,11 +19,11 @@ def test_create_hub(client):
 def test_list_hubs(client):
     admin_token = register_and_login(client, "admin@hub.com", "admin")
     client.post(
-        "/hubs/",
+        "/admin/hubs",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"hub_name": "Delhi Hub", "city": "Delhi"}
     )
-    response = client.get("/hubs/", headers={"Authorization": f"Bearer {admin_token}"})
+    response = client.get("/admin/hubs", headers={"Authorization": f"Bearer {admin_token}"})
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) >= 1
@@ -32,13 +32,13 @@ def test_list_hubs(client):
 def test_update_hub(client):
     admin_token = register_and_login(client, "admin@hub.com", "admin")
     create = client.post(
-        "/hubs/",
+        "/admin/hubs",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"hub_name": "Old Hub", "city": "Pune"}
     )
     hub_id = create.json()["id"]
     response = client.put(
-        f"/hubs/{hub_id}",
+        f"/admin/hubs/{hub_id}",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"hub_name": "Updated Hub", "city": "Pune"}
     )
@@ -49,13 +49,13 @@ def test_update_hub(client):
 def test_delete_hub(client):
     admin_token = register_and_login(client, "admin@hub.com", "admin")
     create = client.post(
-        "/hubs/",
+        "/admin/hubs",
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"hub_name": "Temp Hub", "city": "Hyderabad"}
     )
     hub_id = create.json()["id"]
     response = client.delete(
-        f"/hubs/{hub_id}",
+        f"/admin/hubs/{hub_id}",
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
@@ -65,7 +65,7 @@ def test_delete_hub(client):
 def test_customer_cannot_create_hub(client):
     customer_token = register_and_login(client, "customer@hub.com", "customer")
     response = client.post(
-        "/hubs/",
+        "/admin/hubs",
         headers={"Authorization": f"Bearer {customer_token}"},
         json={"hub_name": "Fake Hub", "city": "Chennai"}
     )
@@ -75,7 +75,7 @@ def test_customer_cannot_create_hub(client):
 def test_delete_nonexistent_hub(client):
     admin_token = register_and_login(client, "admin@hub.com", "admin")
     response = client.delete(
-        "/hubs/00000000-0000-0000-0000-000000000000",
+        "/admin/hubs/00000000-0000-0000-0000-000000000000",
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 404
