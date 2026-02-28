@@ -1,0 +1,4 @@
+CREATE DATABASE auth_db;
+CREATE DATABASE shipment_db;
+CREATE DATABASE hub_db;
+CREATE DATABASE tracking_db;
