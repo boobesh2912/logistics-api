@@ -56,6 +56,14 @@ def update_status_service(db: Session, shipment_id, data: dict, current_user):
     if data["status"] not in SHIPMENT_STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status. Choose from: {SHIPMENT_STATUSES}")
 
+    current_index = SHIPMENT_STATUSES.index(shipment.status)
+    new_index = SHIPMENT_STATUSES.index(data["status"])
+    if new_index != current_index + 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid transition. Current status is '{shipment.status}'. Next allowed: '{SHIPMENT_STATUSES[current_index + 1]}'"
+        )
+
     updated = update_shipment_status(db, shipment, data["status"])
 
     create_tracking_update(db, {

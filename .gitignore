@@ -4,22 +4,22 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
-
+.claude
 # Virtual Environment
 venv/
 env/
-
+/claude
 # Environment Variables
 .env
 
 # Database
 *.db
 *.sqlite3
-
+*.claude
 # IDE
 .vscode/
 .idea/
-
+claude/
 # Pytest
 .pytest_cache/
 htmlcov/

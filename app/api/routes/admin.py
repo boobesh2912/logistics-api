@@ -10,12 +10,21 @@ from app.services.hub_service import (
     create_hub_service,
     update_hub_service,
     delete_hub_service,
+    get_all_hubs_service,
     get_all_users_service,
     delete_user_service,
     get_reports_service
 )
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+@router.get("/hubs", response_model=List[HubResponse])
+def list_hubs(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_role("admin"))
+):
+    return get_all_hubs_service(db)
 
 
 @router.post("/hubs", response_model=HubResponse, status_code=201)
