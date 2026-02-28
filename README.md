@@ -28,7 +28,7 @@ Similar to platforms like FedEx, Delhivery, or DHL backend systems.
 | Passlib + bcrypt | Password hashing |
 | Alembic | Database migrations |
 | Docker | Containerization |
-| Redis | Tracking cache & real-time status (Sprint 4 — architecture defined) |
+| Redis | Tracking cache & real-time status (planned — not implemented) |
 | pytest + httpx | Testing |
 | Python 3.11 | Runtime |
 
@@ -249,8 +249,8 @@ Each service is an independent FastAPI application with its own database and Doc
 | Communication | Technology |
 |---|---|
 | Client → Service | REST (HTTP) |
-| Service → Service | Kafka (architecture defined in PDF; REST fallback used for demo) |
-| Real-time tracking | Redis (architecture defined in PDF) |
+| Service → Service | REST (Kafka planned — not implemented) |
+| Real-time tracking | Redis (planned — not implemented) |
 | Persistence | PostgreSQL |
 | Deployment | Docker |
 
